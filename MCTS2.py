@@ -8,14 +8,13 @@ sys.setrecursionlimit(100000)
 
 class Node:
 
-    def __init__(self, game, board, epsilon, dirAlpha, identifier=0):
+    def __init__(self, mcts, board, player):
         self.board = board
         self.edges = {}
-        self.id = identifier
-        self.dirAlpha = dirAlpha
-        self.valids = self.game.getValidMoves(board, 1)
-        self.epsilon = epsilon
-        self.game = game
+        self.player = player
+        self.mcts = mcts
+        self.id = self.mcts.game.stringRepresentation(board) # TODO check if we need to append player
+        self.valids = self.mcts.game.getValidMoves(board, 1)
 
     def isLeaf(self):
         return len(self.edges) == 0
@@ -27,24 +26,37 @@ class Node:
         self.edges.add(Edge(self, outNode, prior, action))
 
     def solveLeaf(self):
-        self.Ps[s], v = self.nnet.predict(canonicalBoard)
-        self.Ps[s] = self.Ps[s] * self.valids  # masking invalid moves
-        sum_Ps_s = np.sum(self.Ps[s])
+        probs, v = self.mcts.nnet.predict(self.board)
+        probs = probs * self.valids  # masking invalid moves
+        sum_Ps_s = np.sum(probs)
         if sum_Ps_s > 0:
-            self.Ps[s] /= sum_Ps_s  # renormalize
+            probs /= sum_Ps_s  # renormalize
         else:
-            # if all valid moves were masked make all valid moves equally probable
-
-            # NB! All valid moves may be masked if either your NNet architecture is insufficient or you've get overfitting or something else.
-            # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.
             print("All valid moves were masked, do workaround.")
-            self.Ps[s] = self.Ps[s] + self.valids
-            self.Ps[s] /= np.sum(self.Ps[s])
-
-        self.Ns[s] = 0
+            probs = probs + self.valids
+            probs /= np.sum(probs)
+        for a in range(self.mcts.game.getActionSize()):
+            if self.valids[a]:
+                next_s, next_player = self.mcts.game.getNextState(self.board, 1, a)
+                next_s = self.mcts.game.getCanonicalForm(next_s, next_player)
+                stateId = self.mcts.game.stringRepresentation(next_s)
+                if stateId in self.mcts.tree:
+                    node = self.mcts.tree[stateId]
+                else:
+                    node = Node(self.mcts, next_s, next_player)
+                    self.mcts.addNode(node, stateId)
+                self.addEdge(node, probs[a], a)
         return -v
 
     def expand(self):
+        '''
+                self.Qsa = {}  # stores Q values for s,a (as defined in the paper)
+        self.Nsa = {}  # stores #times edge s,a was visited
+        self.Ns = {}  # stores #times board s was visited
+        self.Ps = {}  # stores initial policy (returned by neural net)
+        self.Es = {}  # stores game.getGameEnded ended for board s
+        :return:
+        '''
         if self.isLeaf():
             return self.solveLeaf()
 
@@ -53,40 +65,42 @@ class Node:
         allBest = []
 
         # Add Dirichlet noise for root node if needed.
-        useDirichletNoise = self.isRootNode() and self.epsilon > 0
+        useDirichletNoise = self.isRootNode() and self.mcts.args.epsilon > 0
         if useDirichletNoise:
-            noise = np.random.dirichlet([self.dirAlpha] * len(self.valids))
+            noise = np.random.dirichlet([self.mcts.args.dirAlpha] * len(self.valids))
 
-        # pick the action with the highest upper confidence bound
-        for a in range(self.game.getActionSize()):
-            if self.valids[a]:
-                if (s, a) in self.Qsa:
-                    q = self.Qsa[(s, a)]
-                    n_s_a = self.Nsa[(s, a)]
-                    # u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
-                else:
-                    q = 0
-                    n_s_a = 0
-                    # u = np.random.random_sample() + self.args.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + EPS)  # Q = 0 ?
+        ns = sum(edge.stats['N'] for edge in self.edges)
 
-                p = self.Ps[s][a]
-                if useDirichletNoise:
-                    p = (1 - self.epsilon) * p + self.epsilon * noise[a]
+        for edge in self.edges:
+            a = edge.action
+            if (s, a) in self.Qsa:
+                q = self.Qsa[(s, a)]
+                n_s_a = self.Nsa[(s, a)]
+                # u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
+            else:
+                q = 0
+                n_s_a = 0
+                # u = np.random.random_sample() + self.args.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + EPS)  # Q = 0 ?
 
-                u = q + self.args.cpuct * p * math.sqrt(self.Ns[s]) / (1 + n_s_a)
+            p = self.Ps[s][a]
+            if useDirichletNoise:
+                p = (1 - self.args.epsilon) * p + self.args.epsilon * noise[a]
 
-                if u > cur_best:
-                    cur_best = u
-                    # best_act = a
-                    del allBest[:]
-                    allBest.append(a)
-                elif u == cur_best:
-                    allBest.append(a)
+            u = q + self.mcts.args.cpuct * p * math.sqrt(self.Ns[s]) / (1 + n_s_a)
+
+            if u > cur_best:
+                cur_best = u
+                # best_act = a
+                del allBest[:]
+                allBest.append(a)
+            elif u == cur_best:
+                allBest.append(a)
+
 
         a = np.random.choice(allBest)
 
-        next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
-        next_s = self.game.getCanonicalForm(next_s, next_player)
+        next_s, next_player = self.mcts.game.getNextState(canonicalBoard, 1, a)
+        next_s = self.mcts.game.getCanonicalForm(next_s, next_player)
 
         v = self.search(next_s, False)
 
@@ -130,11 +144,7 @@ class MCTS:
         self.game = game
         self.nnet = nnet
         self.args = args
-        self.Qsa = {}  # stores Q values for s,a (as defined in the paper)
-        self.Nsa = {}  # stores #times edge s,a was visited
-        self.Ns = {}  # stores #times board s was visited
-        self.Ps = {}  # stores initial policy (returned by neural net)
-        self.Es = {}  # stores game.getGameEnded ended for board s
+        self.tree = {}
 
     def getActionProb(self, canonicalBoard, temp=1):
         """
@@ -179,5 +189,8 @@ class MCTS:
             # terminal node
             return -self.Es[s]
 
-        currentNode = Node(self.game, canonicalBoard, self.args.epsilon, self.args.dirAlpha)
+        currentNode = Node(self, canonicalBoard, 1)
         return currentNode.expand()
+
+    def addNode(self, node, identifier):
+        self.tree[identifier] = node
