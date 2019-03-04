@@ -15,7 +15,6 @@ class MCTS:
         self.game = game
         self.nnet = nnet
         self.args = args
-        self.tree = {}
         self.Qsa = {}  # stores Q values for s,a (as defined in the paper)
         self.Nsa = {}  # stores #times edge s,a was visited
         self.Ns = {}  # stores #times board s was visited
