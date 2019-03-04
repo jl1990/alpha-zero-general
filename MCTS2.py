@@ -15,6 +15,7 @@ class Node:
         self.mcts = mcts
         self.id = ident # TODO check if we need to append player
         self.valids = self.mcts.game.getValidMoves(board, 1)
+        self.backfillEdges = []
 
     def isLeaf(self):
         return len(self.edges) == 0
@@ -62,50 +63,36 @@ class Node:
         self.Es = {}  # stores game.getGameEnded ended for board s
         :return:
         '''
-        cur_best = -float('inf')
-        # best_act = -1
-        allBest = []
-
-        # Add Dirichlet noise for root node if needed.
-        epsilon = self.mcts.args.epsilon
-        if self.isRootNode() and epsilon > 0:
-            noise = np.random.dirichlet([self.mcts.args.dirAlpha] * len(self.edges))
-        else:
-            epsilon = 0
-            noise = [0] * len(self.edges)
-
-        ns = sum(edge.stats['N'] for edge in self.edges)
-
-        for idx, edge in enumerate(self.edges):
-            U = self.cpuct * \
-                ((1 - epsilon) * edge.stats['P'] + epsilon * noise[idx]) * \
-                np.sqrt(ns) / (1 + edge.stats['N'])
-            Q = edge.stats['Q']
-            score = Q + U
-            if score > cur_best:
-                cur_best = score
-                del allBest[:]
-                allBest.append(edge)
-            elif score == cur_best:
-                allBest.append(edge)
-                
-        a = np.random.choice(allBest).action
-
-        next_s, next_player = self.mcts.game.getNextState(canonicalBoard, 1, a)
-        next_s = self.mcts.game.getCanonicalForm(next_s, next_player)
-
-        v = self.search(next_s, False)
-
-        if (s, a) in self.Qsa:
-            self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)] + 1)
-            self.Nsa[(s, a)] += 1
-
-        else:
-            self.Qsa[(s, a)] = v
-            self.Nsa[(s, a)] = 1
-
-        self.Ns[s] += 1
-        return -v
+        currentNode = self
+        while ~currentNode.isLeaf():
+            cur_best = -float('inf')
+            # best_act = -1
+            allBest = []
+            epsilon = self.mcts.args.epsilon
+            if self.isRootNode() and epsilon > 0:
+                noise = np.random.dirichlet([self.mcts.args.dirAlpha] * len(self.edges))
+            else:
+                epsilon = 0
+                noise = [0] * len(self.edges)
+            ns = sum(edge.stats['N'] for edge in self.edges)
+            for idx, edge in enumerate(self.edges):
+                U = self.mcts.args.cpuct * \
+                    ((1 - epsilon) * edge.stats['P'] + epsilon * noise[idx]) * \
+                    np.sqrt(ns) / (1 + edge.stats['N'])
+                Q = edge.stats['Q']
+                score = Q + U
+                if score > cur_best:
+                    cur_best = score
+                    del allBest[:]
+                    allBest.append(edge)
+                elif score == cur_best:
+                    allBest.append(edge)
+            selectedEdge = np.random.choice(allBest)
+            a = selectedEdge.action
+            next_s, next_player = self.mcts.game.getNextState(self.board, 1, a)
+            next_s = self.mcts.game.getCanonicalForm(next_s, next_player)
+            currentNode = selectedEdge.outNode
+            self.backfillEdges.append(selectedEdge)
 
 
 class Edge:
@@ -150,7 +137,7 @@ class MCTS:
                    proportional to Nsa[(s,a)]**(1./temp)
         """
         for i in range(self.args.numMCTSSims):
-            self.search(canonicalBoard, True)
+            self.search(canonicalBoard)
 
         s = self.game.stringRepresentation(canonicalBoard)
         counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
