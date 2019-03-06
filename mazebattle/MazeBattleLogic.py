@@ -33,7 +33,6 @@ therefore vector size --> 33
 class Point:
 
     def __init__(self, x, y):
-        '''Defines x and y variables'''
         self.x = x
         self.y = y
 
@@ -51,6 +50,9 @@ class Point:
         if isinstance(other, Point):
             return self.x == other.x and self.y == other.y
         return False
+
+    def __str__(self):
+        return "(" + str(self.x) + ", " + str(self.y) + ")"
 
 
 # from bkcharts.attributes import color
@@ -334,6 +336,12 @@ class Board:
         elif direction == 8:
             vDif = Point(-1, -1)
             shootDir = Board.TAG_BULLET_8
+
+        print("PlayerPos: " + str(playerPos))
+        print("Action: " + str(action))
+        print("Dir: " + str(direction))
+        print("vDif" + str(vDif))
+        print("shootDir: " + str(shootDir))
 
         if action == Board.ACTION_SHOOT:
             affectedPoint = playerPos.add_point(vDif)

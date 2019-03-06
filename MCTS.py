@@ -1,4 +1,3 @@
-import math
 import sys
 
 import numpy as np
@@ -10,10 +9,10 @@ class Node:
 
     def __init__(self, mcts, board, ident, player):
         self.board = board
-        self.edges = {}
+        self.edges = []
         self.player = player
         self.mcts = mcts
-        self.id = ident # TODO check if we need to append player
+        self.id = ident  # TODO check if we need to append player
         self.valids = self.mcts.game.getValidMoves(board, 1)
         self.backfillEdges = []
 
@@ -24,7 +23,7 @@ class Node:
         return self.mcts.root.id == self.id
 
     def addEdge(self, outNode, prior, action):
-        self.edges.add(Edge(self, outNode, prior, action))
+        self.edges.append(Edge(self, outNode, prior, action))
 
     def solveLeaf(self):
         if self not in self.mcts.Es:
@@ -45,11 +44,11 @@ class Node:
             if self.valids[a]:
                 next_s, next_player = self.mcts.game.getNextState(self.board, 1, a)
                 next_s = self.mcts.game.getCanonicalForm(next_s, next_player)
-                stateId = self.mcts.game.stringRepresentation(next_s)
+                stateId = str(self.mcts.game.stringRepresentation(next_s))
                 if stateId in self.mcts.tree:
                     node = self.mcts.tree[stateId]
                 else:
-                    node = Node(self.mcts, next_s, self.mcts.game.stringRepresentation(next_s), next_player)
+                    node = Node(self.mcts, next_s, stateId, self.player * -1)
                     self.mcts.addNode(node, stateId)
                 self.addEdge(node, probs[a], a)
         return -v
@@ -65,7 +64,7 @@ class Node:
         '''
         currentNode = self
         currentBoard = self.board
-        while ~currentNode.isLeaf():
+        while not currentNode.isLeaf():
             cur_best = -float('inf')
             allBest = []
             epsilon = self.mcts.args.epsilon
@@ -93,10 +92,9 @@ class Node:
             currentBoard = self.mcts.game.getCanonicalForm(currentBoard, next_player)
             currentNode = selectedEdge.outNode
             self.backfillEdges.append(selectedEdge)
-        value = self.solveLeaf()
-        currentPlayer = currentNode.player
+        value = currentNode.solveLeaf()
         for edge in self.backfillEdges:
-            direction = 1 if edge.playerTurn == currentPlayer else -1
+            direction = 1 if edge.inNode.player == currentNode.player else -1
             edge.stats['N'] = edge.stats['N'] + 1
             edge.stats['W'] = edge.stats['W'] + value * direction
             edge.stats['Q'] = edge.stats['W'] / edge.stats['N']
@@ -108,7 +106,7 @@ class Edge:
         self.inNode = inNode
         self.outNode = outNode
         self.action = action
-        self.id = inNode.state.id + '|' + outNode.state.id
+        self.id = inNode.id + '|' + outNode.id
 
         self.stats = {
             'N': 0,
@@ -170,7 +168,7 @@ class MCTS:
         return probs
 
     def search(self, canonicalBoard):
-        ident = self.game.stringRepresentation(canonicalBoard)
+        ident = str(self.game.stringRepresentation(canonicalBoard))
         if ident not in self.tree:
             currentNode = Node(self, canonicalBoard, ident, 1)
             self.addNode(currentNode, ident)

@@ -23,7 +23,7 @@ args = dotdict({
 })
 
 if __name__ == "__main__":
-    g = Game(15)
+    g = Game(5)
     nnet = nn(g)
 
     if args.load_model:
