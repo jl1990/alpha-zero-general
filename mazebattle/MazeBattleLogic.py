@@ -337,12 +337,6 @@ class Board:
             vDif = Point(-1, -1)
             shootDir = Board.TAG_BULLET_8
 
-        print("PlayerPos: " + str(playerPos))
-        print("Action: " + str(action))
-        print("Dir: " + str(direction))
-        print("vDif" + str(vDif))
-        print("shootDir: " + str(shootDir))
-
         if action == Board.ACTION_SHOOT:
             affectedPoint = playerPos.add_point(vDif)
             self[affectedPoint.x][affectedPoint.y] = shootDir

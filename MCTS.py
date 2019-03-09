@@ -13,7 +13,7 @@ class Node:
         self.player = player
         self.mcts = mcts
         self.id = ident  # TODO check if we need to append player
-        self.valids = self.mcts.game.getValidMoves(board, 1)
+        self.valids = self.mcts.game.getValidMoves(board, player)
         self.backfillEdges = []
 
     def isLeaf(self):
@@ -27,11 +27,12 @@ class Node:
 
     def solveLeaf(self):
         if self not in self.mcts.Es:
-            self.mcts.Es[self.id] = self.mcts.game.getGameEnded(self.board, 1)
+            self.mcts.Es[self.id] = self.mcts.game.getGameEnded(self.board, self.player)
         if self.mcts.Es[self.id] != 0:
             # terminal node
             return -self.mcts.Es[self.id]
         probs, v = self.mcts.nnet.predict(self.board)
+        v = v[0]
         probs = probs * self.valids  # masking invalid moves
         sum_Ps_s = np.sum(probs)
         if sum_Ps_s > 0:
@@ -42,13 +43,13 @@ class Node:
             probs /= np.sum(probs)
         for a in range(self.mcts.game.getActionSize()):
             if self.valids[a]:
-                next_s, next_player = self.mcts.game.getNextState(self.board, 1, a)
+                next_s, next_player = self.mcts.game.getNextState(self.board, self.player, a)
                 next_s = self.mcts.game.getCanonicalForm(next_s, next_player)
                 stateId = str(self.mcts.game.stringRepresentation(next_s))
                 if stateId in self.mcts.tree:
                     node = self.mcts.tree[stateId]
                 else:
-                    node = Node(self.mcts, next_s, stateId, self.player * -1)
+                    node = Node(self.mcts, next_s, stateId, next_player)
                     self.mcts.addNode(node, stateId)
                 self.addEdge(node, probs[a], a)
         return -v
@@ -63,23 +64,21 @@ class Node:
         :return:
         '''
         currentNode = self
-        currentBoard = self.board
         while not currentNode.isLeaf():
             cur_best = -float('inf')
             allBest = []
             epsilon = self.mcts.args.epsilon
-            if self.isRootNode() and epsilon > 0:
-                noise = np.random.dirichlet([self.mcts.args.dirAlpha] * len(self.edges))
+            if currentNode.isRootNode() and epsilon > 0:
+                noise = np.random.dirichlet([self.mcts.args.dirAlpha] * len(currentNode.edges))
             else:
                 epsilon = 0
-                noise = [0] * len(self.edges)
-            ns = sum(edge.stats['N'] for edge in self.edges)
-            for idx, edge in enumerate(self.edges):
+                noise = [0] * len(currentNode.edges)
+            ns = sum(edge.stats['N'] for edge in currentNode.edges)
+            for idx, edge in enumerate(currentNode.edges):
                 U = self.mcts.args.cpuct * \
                     ((1 - epsilon) * edge.stats['P'] + epsilon * noise[idx]) * \
                     np.sqrt(ns) / (1 + edge.stats['N'])
-                Q = edge.stats['Q']
-                score = Q + U
+                score = edge.stats['Q'] + U
                 if score > cur_best:
                     cur_best = score
                     del allBest[:]
@@ -87,15 +86,12 @@ class Node:
                 elif score == cur_best:
                     allBest.append(edge)
             selectedEdge = np.random.choice(allBest)
-            a = selectedEdge.action
-            currentBoard, next_player = self.mcts.game.getNextState(currentBoard, 1, a)
-            currentBoard = self.mcts.game.getCanonicalForm(currentBoard, next_player)
             currentNode = selectedEdge.outNode
+            selectedEdge.stats['N'] = selectedEdge.stats['N'] + 1
             self.backfillEdges.append(selectedEdge)
         value = currentNode.solveLeaf()
         for edge in self.backfillEdges:
             direction = 1 if edge.inNode.player == currentNode.player else -1
-            edge.stats['N'] = edge.stats['N'] + 1
             edge.stats['W'] = edge.stats['W'] + value * direction
             edge.stats['Q'] = edge.stats['W'] / edge.stats['N']
 
