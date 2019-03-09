@@ -12,7 +12,7 @@ class Node:
         self.edges = []
         self.player = player
         self.mcts = mcts
-        self.id = ident  # TODO check if we need to append player
+        self.id = ident + str(player)
         self.valids = self.mcts.game.getValidMoves(board, player)
         self.backfillEdges = []
 
@@ -30,7 +30,7 @@ class Node:
             self.mcts.Es[self.id] = self.mcts.game.getGameEnded(self.board, self.player)
         if self.mcts.Es[self.id] != 0:
             # terminal node
-            return -self.mcts.Es[self.id]
+            return self.mcts.Es[self.id]
         probs, v = self.mcts.nnet.predict(self.board)
         v = v[0]
         probs = probs * self.valids  # masking invalid moves
@@ -44,15 +44,14 @@ class Node:
         for a in range(self.mcts.game.getActionSize()):
             if self.valids[a]:
                 next_s, next_player = self.mcts.game.getNextState(self.board, self.player, a)
-                next_s = self.mcts.game.getCanonicalForm(next_s, next_player)
-                stateId = str(self.mcts.game.stringRepresentation(next_s))
+                stateId = str(self.mcts.game.stringRepresentation(next_s)) + str(next_player)
                 if stateId in self.mcts.tree:
                     node = self.mcts.tree[stateId]
                 else:
                     node = Node(self.mcts, next_s, stateId, next_player)
                     self.mcts.addNode(node, stateId)
                 self.addEdge(node, probs[a], a)
-        return -v
+        return v
 
     def expand(self):
         '''
@@ -164,7 +163,7 @@ class MCTS:
         return probs
 
     def search(self, canonicalBoard):
-        ident = str(self.game.stringRepresentation(canonicalBoard))
+        ident = str(self.game.stringRepresentation(canonicalBoard)) + '1'
         if ident not in self.tree:
             currentNode = Node(self, canonicalBoard, ident, 1)
             self.addNode(currentNode, ident)

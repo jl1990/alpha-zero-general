@@ -55,8 +55,11 @@ class Coach:
 
             pi = self.mcts.getActionProb(canonicalBoard, temp=temp)
             sym = self.game.getSymmetries(canonicalBoard, pi)
-            for b, p in sym:
-                trainExamples.append([b, self.curPlayer, p, None])
+            if len(sym) == 0:
+                trainExamples.append([canonicalBoard, self.curPlayer, pi, None])
+            else:
+                for b, p in sym:
+                    trainExamples.append([b, self.curPlayer, p, None])
 
             action = np.random.choice(len(pi), p=pi)
             board, self.curPlayer = self.game.getNextState(board, self.curPlayer, action)
