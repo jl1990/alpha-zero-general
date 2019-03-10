@@ -160,8 +160,8 @@ class MCTS:
         for edge in edges:
             probs[edge.action] = pow(counts[edge.action], 1 / temp)
 
-        probs = probs / (np.sum(probs) * 1.0)
-
+        sumProbs = np.sum(probs)
+        probs = [x / sumProbs for x in probs]
         return probs
 
     def search(self, canonicalBoard):
