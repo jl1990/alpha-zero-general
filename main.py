@@ -1,11 +1,11 @@
 from Coach import Coach
-from mazebattle.MazeBattleGame import MazeBattleGame as Game
-from mazebattle.keras.NNet import NNetWrapper as nn
+from tictactoe.TicTacToeGame import TicTacToeGame as Game
+from tictactoe.keras.NNet import NNetWrapper as nn
 from utils import *
 
 args = dotdict({
-    'numIters': 1000,
-    'numEps': 20,
+    'numIters': 5,
+    'numEps': 100,
     'tempThreshold': 20000,
     'updateThreshold': 0.55,
     'maxlenOfQueue': 200000,
@@ -23,7 +23,7 @@ args = dotdict({
 })
 
 if __name__ == "__main__":
-    g = Game(5)
+    g = Game(3)
     nnet = nn(g)
 
     if args.load_model:
