@@ -1,5 +1,6 @@
-import sys
 import hashlib
+import sys
+
 import numpy as np
 
 sys.setrecursionlimit(100000)
@@ -142,9 +143,18 @@ class MCTS:
             self.search(canonicalBoard)
 
         edges = self.root.edges
+
         counts = [0] * self.game.getActionSize()
         for edge in edges:
             counts[edge.action] = 1
+
+        probs = [0] * len(counts)
+        values = [0] * len(counts)
+        for edge in edges:
+            probs[edge.action] = pow(edge.stats['N'], 1 / temp)
+            values[edge.action] = edge.stats['Q']
+
+        probs = probs / (np.sum(probs) * 1.0)
 
         if temp == 0:
             maxi = max(counts)
@@ -152,16 +162,7 @@ class MCTS:
             bestA = np.random.choice(allBest)
             probs = [0] * len(counts)
             probs[bestA] = 1
-            return probs
 
-        counts = [x ** (1. / temp) for x in counts]
-        countSum = sum(counts)
-        if countSum == 0:
-            # Random choice?
-            probs = [0] * len(counts)
-            probs[np.random.randint(0, len(probs))] = 1
-        else:
-            probs = [x / float(countSum) for x in counts]
         return probs
 
     def search(self, canonicalBoard):
