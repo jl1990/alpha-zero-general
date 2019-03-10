@@ -146,22 +146,21 @@ class MCTS:
 
         counts = [0] * self.game.getActionSize()
         for edge in edges:
-            counts[edge.action] = 1
+            counts[edge.action] = edge.stats['N']
 
         probs = [0] * len(counts)
-        values = [0] * len(counts)
-        for edge in edges:
-            probs[edge.action] = pow(edge.stats['N'], 1 / temp)
-            values[edge.action] = edge.stats['Q']
-
-        probs = probs / (np.sum(probs) * 1.0)
 
         if temp == 0:
             maxi = max(counts)
             allBest = np.where(np.array(counts) == maxi)[0]
             bestA = np.random.choice(allBest)
-            probs = [0] * len(counts)
             probs[bestA] = 1
+            return probs
+
+        for edge in edges:
+            probs[edge.action] = pow(counts[edge.action], 1 / temp)
+
+        probs = probs / float(np.sum(probs))
 
         return probs
 
