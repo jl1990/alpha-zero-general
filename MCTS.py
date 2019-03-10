@@ -1,5 +1,5 @@
 import sys
-
+import hashlib
 import numpy as np
 
 sys.setrecursionlimit(100000)
@@ -12,7 +12,7 @@ class Node:
         self.edges = []
         self.player = player
         self.mcts = mcts
-        self.id = ident + str(player)
+        self.id = ident
         self.valids = self.mcts.game.getValidMoves(board, player)
         self.backfillEdges = []
 
@@ -44,7 +44,8 @@ class Node:
         for a in range(self.mcts.game.getActionSize()):
             if self.valids[a]:
                 next_s, next_player = self.mcts.game.getNextState(self.board, self.player, a)
-                stateId = str(self.mcts.game.stringRepresentation(next_s)) + str(next_player)
+                stateId = hashlib.md5(
+                    (str(self.mcts.game.stringRepresentation(next_s)) + str(next_player)).encode('utf-8')).hexdigest()
                 if stateId in self.mcts.tree:
                     node = self.mcts.tree[stateId]
                 else:
@@ -63,7 +64,6 @@ class Node:
         :return:
         '''
         currentNode = self
-        initialPlayer = currentNode.player
         while not currentNode.isLeaf():
             cur_best = -float('inf')
             allBest = []
@@ -91,9 +91,10 @@ class Node:
             self.backfillEdges.append(selectedEdge)
         value = currentNode.solveLeaf()
         for edge in self.backfillEdges:
-            direction = 1 if edge.inNode.player == initialPlayer else -1
+            direction = 1 if edge.inNode.player == self.player else -1
             edge.stats['W'] = edge.stats['W'] + value * direction
             edge.stats['Q'] = edge.stats['W'] / edge.stats['N']
+        self.backfillEdges = []
 
 
 class Edge:
@@ -164,7 +165,7 @@ class MCTS:
         return probs
 
     def search(self, canonicalBoard):
-        ident = str(self.game.stringRepresentation(canonicalBoard)) + '1'
+        ident = hashlib.md5((str(self.game.stringRepresentation(canonicalBoard)) + '1').encode('utf-8')).hexdigest()
         if ident not in self.tree:
             currentNode = Node(self, canonicalBoard, ident, 1)
             self.addNode(currentNode, ident)
