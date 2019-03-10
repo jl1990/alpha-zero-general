@@ -63,6 +63,7 @@ class Node:
         :return:
         '''
         currentNode = self
+        initialPlayer = currentNode.player
         while not currentNode.isLeaf():
             cur_best = -float('inf')
             allBest = []
@@ -90,7 +91,7 @@ class Node:
             self.backfillEdges.append(selectedEdge)
         value = currentNode.solveLeaf()
         for edge in self.backfillEdges:
-            direction = 1 if edge.inNode.player == currentNode.player else -1
+            direction = 1 if edge.inNode.player == initialPlayer else -1
             edge.stats['W'] = edge.stats['W'] + value * direction
             edge.stats['Q'] = edge.stats['W'] / edge.stats['N']
 
