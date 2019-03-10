@@ -160,7 +160,7 @@ class MCTS:
         for edge in edges:
             probs[edge.action] = pow(counts[edge.action], 1 / temp)
 
-        probs = probs / float(np.sum(probs))
+        probs = probs / (np.sum(probs) * 1.0)
 
         return probs
 
