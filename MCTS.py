@@ -31,7 +31,7 @@ class Node:
             self.mcts.Es[self.id] = self.mcts.game.getGameEnded(self.board, self.player)
         if self.mcts.Es[self.id] != 0:
             # terminal node
-            return self.mcts.Es[self.id]
+            return -self.mcts.Es[self.id]
         probs, v = self.mcts.nnet.predict(self.board)
         v = v[0]
         probs = probs * self.valids  # masking invalid moves
@@ -53,7 +53,7 @@ class Node:
                     node = Node(self.mcts, next_s, stateId, next_player)
                     self.mcts.addNode(node, stateId)
                 self.addEdge(node, probs[a], a)
-        return v
+        return -v
 
     def expand(self):
         '''
