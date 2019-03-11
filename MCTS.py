@@ -15,7 +15,6 @@ class Node:
         self.mcts = mcts
         self.id = ident
         self.valids = self.mcts.game.getValidMoves(board, player)
-        self.backfillEdges = []
 
     def isLeaf(self):
         return len(self.edges) == 0
@@ -65,6 +64,7 @@ class Node:
         :return:
         '''
         currentNode = self
+        backfillEdges = []
         while not currentNode.isLeaf():
             cur_best = -float('inf')
             allBest = []
@@ -89,13 +89,12 @@ class Node:
             selectedEdge = np.random.choice(allBest)
             currentNode = selectedEdge.outNode
             selectedEdge.stats['N'] = selectedEdge.stats['N'] + 1
-            self.backfillEdges.append(selectedEdge)
+            backfillEdges.append(selectedEdge)
         value = currentNode.solveLeaf()
-        for edge in self.backfillEdges:
+        for edge in backfillEdges:
             direction = 1 if edge.inNode.player == self.player else -1
             edge.stats['W'] = edge.stats['W'] + value * direction
             edge.stats['Q'] = edge.stats['W'] / edge.stats['N']
-        self.backfillEdges = []
 
 
 class Edge:
