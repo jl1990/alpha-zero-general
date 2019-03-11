@@ -88,11 +88,11 @@ class Node:
                     allBest.append(edge)
             selectedEdge = np.random.choice(allBest)
             currentNode = selectedEdge.outNode
-            selectedEdge.stats['N'] = selectedEdge.stats['N'] + 1
             backfillEdges.append(selectedEdge)
         value = currentNode.solveLeaf()
         for edge in backfillEdges:
             direction = 1 if edge.inNode.player == self.player else -1
+            edge.stats['N'] = edge.stats['N'] + 1
             edge.stats['W'] = edge.stats['W'] + value * direction
             edge.stats['Q'] = edge.stats['W'] / edge.stats['N']
 
