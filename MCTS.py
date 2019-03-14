@@ -1,6 +1,6 @@
 import hashlib
 import sys
-
+import time
 import numpy as np
 
 sys.setrecursionlimit(100000)
@@ -14,7 +14,12 @@ class Node:
         self.player = player
         self.mcts = mcts
         self.id = ident
-        self.valids = self.mcts.game.getValidMoves(board, player)
+        self.valids = None
+
+    def getValids(self):
+        if self.valids is None:
+            self.valids = self.mcts.game.getValidMoves(self.board, self.player)
+        return self.valids
 
     def isLeaf(self):
         return len(self.edges) == 0
@@ -29,29 +34,21 @@ class Node:
         if self not in self.mcts.Es:
             self.mcts.Es[self.id] = self.mcts.game.getGameEnded(self.board, self.player)
         if self.mcts.Es[self.id] != 0:
-            # terminal node
-            return self.mcts.Es[self.id]
+            return self.mcts.Es[self.id]  # terminal node
         probs, v = self.mcts.nnet.predict(self.board)
-        v = v[0]
-        probs = probs * self.valids  # masking invalid moves
+        probs = probs * self.getValids()  # masking invalid moves
         sum_Ps_s = np.sum(probs)
-        if sum_Ps_s > 0:
-            probs /= sum_Ps_s  # renormalize
-        else:
-            print("All valid moves were masked, do workaround.")
-            probs = probs + self.valids
-            probs /= np.sum(probs)
-        for a in range(self.mcts.game.getActionSize()):
-            if self.valids[a]:
-                next_s, next_player = self.mcts.game.getNextState(self.board, self.player, a)
-                stateId = hashlib.md5(
-                    (str(self.mcts.game.stringRepresentation(next_s)) + str(next_player)).encode('utf-8')).hexdigest()
-                if stateId in self.mcts.tree:
-                    node = self.mcts.tree[stateId]
-                else:
-                    node = Node(self.mcts, next_s, stateId, next_player)
-                    self.mcts.addNode(node, stateId)
-                self.addEdge(node, probs[a], a)
+        probs /= sum_Ps_s
+        for a in [x for x in range(self.mcts.game.getActionSize()) if self.getValids()[x]]:
+            next_s, next_player = self.mcts.game.getNextState(self.board, self.player, a)
+            stateId = hashlib.md5(
+                (str(self.mcts.game.stringRepresentation(next_s)) + str(next_player)).encode('utf-8')).hexdigest()
+            if stateId in self.mcts.tree:
+                node = self.mcts.tree[stateId]
+            else:
+                node = Node(self.mcts, next_s, stateId, next_player)
+                self.mcts.addNode(node, stateId)
+            self.addEdge(node, probs[a], a)
         return v
 
     def expand(self):
@@ -140,7 +137,6 @@ class MCTS:
         """
         for i in range(self.args.numMCTSSims):
             self.search(canonicalBoard)
-
         edges = self.root.edges
 
         counts = [0] * self.game.getActionSize()

@@ -1,16 +1,16 @@
 from Coach import Coach
-from tictactoe.TicTacToeGame import TicTacToeGame as Game
-from tictactoe.keras.NNet import NNetWrapper as nn
+from gobang.GobangGame import GobangGame as Game
+from gobang.keras.NNet import NNetWrapper as nn
 from utils import *
 
 args = dotdict({
-    'numIters': 5,
-    'numEps': 100,
+    'numIters': 10,
+    'numEps': 10,
     'tempThreshold': 20000,
     'updateThreshold': 0.55,
     'maxlenOfQueue': 200000,
     'numMCTSSims': 50,
-    'arenaCompare': 40,
+    'arenaCompare': 10,
     'cpuct': 1.2,
     'epsilon': 0.25,
     'dirAlpha': 0.03,
@@ -23,7 +23,7 @@ args = dotdict({
 })
 
 if __name__ == "__main__":
-    g = Game(3)
+    g = Game()
     nnet = nn(g)
 
     if args.load_model:

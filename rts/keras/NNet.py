@@ -70,7 +70,7 @@ class NNetWrapper(NeuralNet):
 
         # run
         pi, v = self.nnet.model.predict(board)
-        return pi[0], v[0]
+        return pi[0], v[0][0]
 
     def save_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
         filepath = os.path.join(folder, filename)
