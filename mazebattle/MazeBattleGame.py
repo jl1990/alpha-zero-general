@@ -28,7 +28,7 @@ class MazeBattleGame(Game):
 
     def getActionSize(self):
         # return number of actions
-        return 33
+        return 25
 
     def getNextState(self, board, player, action):
         # if player takes action on board, return next (board,player)
@@ -49,9 +49,6 @@ class MazeBattleGame(Game):
         elif 17 <= action <= 24:
             actionType = Board.ACTION_BREAK_WALL
             direction = action - 16
-        elif 25 <= action <= 32:
-            actionType = Board.ACTION_SHOOT
-            direction = action - 24
 
         move = (actionType, direction)
         b.execute_move(move, player)

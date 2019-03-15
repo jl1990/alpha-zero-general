@@ -84,13 +84,13 @@ class Node:
                 elif score == cur_best:
                     allBest.append(edge)
             selectedEdge = np.random.choice(allBest)
+            selectedEdge.stats['N'] += 1
             currentNode = selectedEdge.outNode
             backfillEdges.append(selectedEdge)
         value = currentNode.solveLeaf()
         for edge in backfillEdges:
             direction = 1 if edge.inNode.player == self.player else -1
-            edge.stats['N'] = edge.stats['N'] + 1
-            edge.stats['W'] = edge.stats['W'] + value * direction
+            edge.stats['W'] += value * direction
             edge.stats['Q'] = edge.stats['W'] / edge.stats['N']
 
 
@@ -137,35 +137,30 @@ class MCTS:
         """
         for i in range(self.args.numMCTSSims):
             self.search(canonicalBoard)
+
         edges = self.root.edges
 
-        counts = [0] * self.game.getActionSize()
-        for edge in edges:
-            counts[edge.action] = edge.stats['N']
-
-        probs = [0] * len(counts)
+        edgesInformation = dict([(edge.action, edge.stats['N']) for edge in edges])
+        counts = [edgesInformation.get(i) if i in edgesInformation.keys() else 0 for i in
+                  range(self.game.getActionSize())]
 
         if temp == 0:
-            maxi = max(counts)
-            allBest = np.where(np.array(counts) == maxi)[0]
-            bestA = np.random.choice(allBest)
-            probs[bestA] = 1
+            probs = [0] * len(self.game.getActionSize())
+            probs[np.random.choice(np.where(np.array(counts) == max(counts))[0])] = 1
             return probs
 
-        for edge in edges:
-            probs[edge.action] = pow(counts[edge.action], 1 / temp)
-
+        probs = [pow(x, 1 / temp) for x in counts]
         sumProbs = np.sum(probs)
         probs = [x / sumProbs for x in probs]
         return probs
 
     def search(self, canonicalBoard):
         ident = hashlib.md5((str(self.game.stringRepresentation(canonicalBoard)) + '1').encode('utf-8')).hexdigest()
-        if ident not in self.tree:
+        if ident in self.tree:
+            currentNode = self.tree[ident]
+        else:
             currentNode = Node(self, canonicalBoard, ident, 1)
             self.addNode(currentNode, ident)
-        else:
-            currentNode = self.tree[ident]
         self.root = currentNode
         currentNode.expand()
         return currentNode

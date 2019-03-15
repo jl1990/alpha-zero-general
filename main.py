@@ -1,16 +1,16 @@
 from Coach import Coach
-from gobang.GobangGame import GobangGame as Game
-from gobang.keras.NNet import NNetWrapper as nn
+from mazebattle.MazeBattleGame import MazeBattleGame as Game
+from mazebattle.keras.NNet import NNetWrapper as nn
 from utils import *
 
 args = dotdict({
-    'numIters': 10,
-    'numEps': 10,
+    'numIters': 20,
+    'numEps': 100,
     'tempThreshold': 20000,
     'updateThreshold': 0.55,
     'maxlenOfQueue': 200000,
     'numMCTSSims': 50,
-    'arenaCompare': 10,
+    'arenaCompare': 20,
     'cpuct': 1.2,
     'epsilon': 0.25,
     'dirAlpha': 0.03,
@@ -23,7 +23,7 @@ args = dotdict({
 })
 
 if __name__ == "__main__":
-    g = Game()
+    g = Game(5)
     nnet = nn(g)
 
     if args.load_model:
