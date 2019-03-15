@@ -145,7 +145,7 @@ class MCTS:
                   range(self.game.getActionSize())]
 
         if temp == 0:
-            probs = [0] * len(self.game.getActionSize())
+            probs = [0] * self.game.getActionSize()
             probs[np.random.choice(np.where(np.array(counts) == max(counts))[0])] = 1
             return probs
 

@@ -141,7 +141,8 @@ class Coach:
                 self.nnet.save_checkpoint(folder=self.args.checkpoint, filename=self.getCheckpointFile(i))
                 self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='best.pth.tar')
 
-    def getCheckpointFile(self, iteration):
+    @staticmethod
+    def getCheckpointFile(iteration):
         return 'checkpoint_' + str(iteration) + '.pth.tar'
 
     def saveTrainExamples(self, iteration):
