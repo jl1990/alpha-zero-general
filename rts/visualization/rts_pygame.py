@@ -45,7 +45,8 @@ def init_visuals(world_width: int, world_height: int, verbose=True) -> Optional[
         import pygame
 
         pygame.init()
-        canvas_scale = int(ctypes.windll.user32.GetSystemMetrics(1) * (2 / 3) / world_height)  # for drawing - it takes 2 thirds of screen height
+        canvas_scale = int(ctypes.windll.user32.GetSystemMetrics(1) * (
+                2 / 3) / world_height)  # for drawing - it takes 2 thirds of screen height
 
         # square
 
@@ -72,7 +73,8 @@ def update_graphics(board: np.ndarray, game_display, clock, fps: int = 1) -> Non
 
     n = board.shape[0]
 
-    canvas_scale = int(ctypes.windll.user32.GetSystemMetrics(1) * (16 / 30) / n)  # for drawing - it takes 2 thirds of screen height
+    canvas_scale = int(
+        ctypes.windll.user32.GetSystemMetrics(1) * (16 / 30) / n)  # for drawing - it takes 2 thirds of screen height
 
     # clear display
     game_display.fill((255, 255, 255))
@@ -87,17 +89,33 @@ def update_graphics(board: np.ndarray, game_display, clock, fps: int = 1) -> Non
         for x in range(canvas_scale, (n + 2) * canvas_scale, canvas_scale):
             pygame.draw.line(game_display, (0, 0, 0), [canvas_scale, x], [(n + 1) * canvas_scale, x])
             if x < (n + 1) * canvas_scale and y < (n + 1) * canvas_scale:
-                message_display(game_display, u"" + str(x / canvas_scale - 1) + ", " + str(y / canvas_scale - 1), ((x + canvas_scale / 4), (y + canvas_scale / 10)), int(canvas_scale / 8))
+                message_display(game_display, u"" + str(x / canvas_scale - 1) + ", " + str(y / canvas_scale - 1),
+                                ((x + canvas_scale / 4), (y + canvas_scale / 10)), int(canvas_scale / 8))
 
     # gold for each player:
     gold_p1 = board[int(n / 2) - 1][int(n / 2)][MONEY_IDX]
     gold_p2 = board[int(n / 2)][int(n / 2) - 1][MONEY_IDX]
 
-    message_display(game_display, u"" + 'Gold Player +1: ' + str(gold_p1), (int((n / 8) * canvas_scale), (n + 1) * canvas_scale + int(int(canvas_scale / 12) + canvas_scale * (0 / 4) + int(canvas_scale * (1 / 8)))), int(canvas_scale / 6))
-    message_display(game_display, u"" + 'Gold Player -1: ' + str(gold_p2), (int((n / 8) * canvas_scale), (n + 1) * canvas_scale + int(int(canvas_scale / 12) + canvas_scale * (1 / 4) + int(canvas_scale * (1 / 8)))), int(canvas_scale / 6))
+    message_display(game_display, u"" + 'Gold Player +1: ' + str(gold_p1), (int((n / 8) * canvas_scale),
+                                                                            (n + 1) * canvas_scale + int(int(
+                                                                                canvas_scale / 12) + canvas_scale * (
+                                                                                                                 0 / 4) + int(
+                                                                                canvas_scale * (1 / 8)))),
+                    int(canvas_scale / 6))
+    message_display(game_display, u"" + 'Gold Player -1: ' + str(gold_p2), (int((n / 8) * canvas_scale),
+                                                                            (n + 1) * canvas_scale + int(int(
+                                                                                canvas_scale / 12) + canvas_scale * (
+                                                                                                                 1 / 4) + int(
+                                                                                canvas_scale * (1 / 8)))),
+                    int(canvas_scale / 6))
 
     time_remaining = board[0][0][TIME_IDX]
-    message_display(game_display, u"" + 'Remaining ' + str(time_remaining), (int((n / 8) * canvas_scale), (n + 1) * canvas_scale + int(int(canvas_scale / 12) + canvas_scale * (2 / 4) + int(canvas_scale * (1 / 8)))), int(canvas_scale / 6))
+    message_display(game_display, u"" + 'Remaining ' + str(time_remaining), (int((n / 8) * canvas_scale),
+                                                                             (n + 1) * canvas_scale + int(int(
+                                                                                 canvas_scale / 12) + canvas_scale * (
+                                                                                                                  2 / 4) + int(
+                                                                                 canvas_scale * (1 / 8)))),
+                    int(canvas_scale / 6))
 
     for y in range(n):
         for x in range(n):
@@ -108,7 +126,8 @@ def update_graphics(board: np.ndarray, game_display, clock, fps: int = 1) -> Non
                 a_type = board[x][y][A_TYPE_IDX]
                 actor_color = d_a_color[a_type]
 
-                actor_location = (int(x * canvas_scale + canvas_scale / 2 + canvas_scale), int(y * canvas_scale + canvas_scale / 2) + canvas_scale)
+                actor_location = (int(x * canvas_scale + canvas_scale / 2 + canvas_scale),
+                                  int(y * canvas_scale + canvas_scale / 2) + canvas_scale)
                 actor_x, actor_y = actor_location
 
                 actor_size = int(canvas_scale / 3)
@@ -129,10 +148,12 @@ def update_graphics(board: np.ndarray, game_display, clock, fps: int = 1) -> Non
                 message_display(game_display, u"" + actor_short_name, actor_location, int(actor_size * 0.7))
 
                 if a_type != 1:  # if not gold
-                    message_display(game_display, u"hp: " + str(actor_health), (actor_x, actor_y + canvas_scale * (2 / 10)), int(actor_size * 0.5))
+                    message_display(game_display, u"hp: " + str(actor_health),
+                                    (actor_x, actor_y + canvas_scale * (2 / 10)), int(actor_size * 0.5))
 
                 if a_type == 2:  # if npc
-                    message_display(game_display, u"carry: " + str(actor_carry), (actor_x, actor_y + canvas_scale * (4 / 10)), int(actor_size * 0.5))
+                    message_display(game_display, u"carry: " + str(actor_carry),
+                                    (actor_x, actor_y + canvas_scale * (4 / 10)), int(actor_size * 0.5))
 
     pygame.display.update()
 

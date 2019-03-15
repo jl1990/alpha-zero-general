@@ -4,7 +4,8 @@ from typing import Any
 import numpy as np
 
 sys.path.append('../..')
-from rts.src.config import d_a_type, d_acts, A_TYPE_IDX, P_NAME_IDX, CARRY_IDX, MONEY_IDX, NUM_ACTS, ACTS_REV, NUM_ENCODERS, HEALTH_IDX, TIME_IDX
+from rts.src.config import d_a_type, d_acts, A_TYPE_IDX, P_NAME_IDX, CARRY_IDX, MONEY_IDX, NUM_ACTS, ACTS_REV, \
+    NUM_ENCODERS, HEALTH_IDX, TIME_IDX
 
 """
 Board.py
@@ -205,7 +206,8 @@ class Board:
         :param a_type: type of unit to spawn on new coordinate
         :param config: additional config that is separate for each player (maximum actor health for this type)
         """
-        self[n_x][n_y] = [self[x][y][P_NAME_IDX], a_type, config.a_max_health[a_type], 0, self[x][y][MONEY_IDX], self[x][y][TIME_IDX]]
+        self[n_x][n_y] = [self[x][y][P_NAME_IDX], a_type, config.a_max_health[a_type], 0, self[x][y][MONEY_IDX],
+                          self[x][y][TIME_IDX]]
 
     def _heal(self, x, y, n_x, n_y, config):
         """
@@ -226,7 +228,8 @@ class Board:
             self._update_money(self[n_x][n_y][P_NAME_IDX], -config.HEAL_COST)
 
         # clamp value to max
-        self[n_x][n_y][HEALTH_IDX] = self.clamp(self[n_x][n_y][HEALTH_IDX] + config.HEAL_AMOUNT, 0, config.a_max_health[self[n_x][n_y][A_TYPE_IDX]])
+        self[n_x][n_y][HEALTH_IDX] = self.clamp(self[n_x][n_y][HEALTH_IDX] + config.HEAL_AMOUNT, 0,
+                                                config.a_max_health[self[n_x][n_y][A_TYPE_IDX]])
 
     def get_moves_for_square(self, x, y, config) -> Any:
         """
@@ -277,9 +280,15 @@ class Board:
             return config.acts_enabled.left and self._check_if_empty(x - 1, y)
 
         if act == "mine_resources":
-            return config.acts_enabled.mine_resources and self[x][y][CARRY_IDX] == 0 and self._check_if_nearby(x, y, d_a_type['Gold'])
+            return config.acts_enabled.mine_resources and self[x][y][CARRY_IDX] == 0 and self._check_if_nearby(x, y,
+                                                                                                               d_a_type[
+                                                                                                                   'Gold'])
         if act == "return_resources":
-            return config.acts_enabled.return_resources and self[x][y][CARRY_IDX] == 1 and self._check_if_nearby(x, y, d_a_type['Hall'], check_friendly=True) and (config.MAX_GOLD >= self[x][y][MONEY_IDX] + config.MONEY_INC)
+            return config.acts_enabled.return_resources and self[x][y][CARRY_IDX] == 1 and self._check_if_nearby(x, y,
+                                                                                                                 d_a_type[
+                                                                                                                     'Hall'],
+                                                                                                                 check_friendly=True) and (
+                           config.MAX_GOLD >= self[x][y][MONEY_IDX] + config.MONEY_INC)
 
         if act == "attack_up":
             return config.acts_enabled.attack and self._check_if_attack(x, y, x, y - 1)
@@ -356,7 +365,8 @@ class Board:
         :param n_y: can attack actor on coordinate n_y
         :return: true/false
         """
-        return 0 <= n_x < self.n and 0 <= n_y < self.n and self[x][y][P_NAME_IDX] == -self[n_x][n_y][P_NAME_IDX] and self[n_x][n_y][A_TYPE_IDX] != d_a_type['Gold']
+        return 0 <= n_x < self.n and 0 <= n_y < self.n and self[x][y][P_NAME_IDX] == -self[n_x][n_y][P_NAME_IDX] and \
+               self[n_x][n_y][A_TYPE_IDX] != d_a_type['Gold']
 
     def _check_if_heal(self, x, y, config):
         """
@@ -366,8 +376,10 @@ class Board:
         :param config: special config specific for each player (max_health, heal_cost)
         :return: true/false
         """
-        return 0 <= x < self.n and 0 <= y < self.n and self[x][y][P_NAME_IDX] == self[x][y][P_NAME_IDX] and self[x][y][A_TYPE_IDX] != d_a_type['Gold'] and self[x][y][A_TYPE_IDX] > 0 and self[x][y][HEALTH_IDX] < config.a_max_health[self[x][y][A_TYPE_IDX]] and (
-                config.SACRIFICIAL_HEAL or self[x][y][MONEY_IDX] - config.HEAL_COST >= 0)
+        return 0 <= x < self.n and 0 <= y < self.n and self[x][y][P_NAME_IDX] == self[x][y][P_NAME_IDX] and self[x][y][
+            A_TYPE_IDX] != d_a_type['Gold'] and self[x][y][A_TYPE_IDX] > 0 and self[x][y][HEALTH_IDX] < \
+               config.a_max_health[self[x][y][A_TYPE_IDX]] and (
+                       config.SACRIFICIAL_HEAL or self[x][y][MONEY_IDX] - config.HEAL_COST >= 0)
 
     def _check_if_nearby(self, x, y, a_type, check_friendly=False):
         """
@@ -452,7 +464,8 @@ class Board:
         :param player: player that requires to know his money count
         :return: money count for specified player
         """
-        return sum([self[x][y][MONEY_IDX] for x in range(self.n) for y in range(self.n) if self[x][y][P_NAME_IDX] == player])
+        return sum(
+            [self[x][y][MONEY_IDX] for x in range(self.n) for y in range(self.n) if self[x][y][P_NAME_IDX] == player])
 
     def get_health_score(self, player) -> int:
         """
@@ -460,7 +473,8 @@ class Board:
         :param player: player that requires to know sum of health for his units
         :return: sum of health for specified player
         """
-        return sum([self[x][y][HEALTH_IDX] for x in range(self.n) for y in range(self.n) if self[x][y][P_NAME_IDX] == player])
+        return sum(
+            [self[x][y][HEALTH_IDX] for x in range(self.n) for y in range(self.n) if self[x][y][P_NAME_IDX] == player])
 
     def get_combined_score(self, player) -> int:
         """
@@ -469,4 +483,5 @@ class Board:
         :return: count of money + sum of health of specified players' units
         """
         # money is not worth more than 1hp because this forces players to spend money in order to create new units
-        return sum([self[x][y][HEALTH_IDX] + self[x][y][MONEY_IDX] for x in range(self.n) for y in range(self.n) if self[x][y][P_NAME_IDX] == player])
+        return sum([self[x][y][HEALTH_IDX] + self[x][y][MONEY_IDX] for x in range(self.n) for y in range(self.n) if
+                    self[x][y][P_NAME_IDX] == player])

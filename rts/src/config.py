@@ -75,10 +75,15 @@ d_type_rev = dotdict({
 # Dictionary for actions and which actor can execute them
 d_acts = dotdict({
     1: [],  # Gold
-    2: ['up', 'down', 'left', 'right', 'mine_resources', 'return_resources', 'barracks_up', 'barracks_down', 'barracks_right', 'barracks_left', 'town_hall_up', 'town_hall_down', 'town_hall_right', 'town_hall_left', 'idle', 'heal_up', 'heal_down', 'heal_right', 'heal_left'],  # Work
-    3: ['rifle_infantry_up', 'rifle_infantry_down', 'rifle_infantry_right', 'rifle_infantry_left', 'idle', 'heal_up', 'heal_down', 'heal_right', 'heal_left'],  # Barr
-    4: ['up', 'down', 'left', 'right', 'attack_up', 'attack_down', 'attack_right', 'attack_left', 'idle', 'heal_up', 'heal_down', 'heal_right', 'heal_left'],  # Rifl
-    5: ['npc_up', 'npc_down', 'npc_right', 'npc_left', 'idle', 'heal_up', 'heal_down', 'heal_right', 'heal_left'],  # Hall
+    2: ['up', 'down', 'left', 'right', 'mine_resources', 'return_resources', 'barracks_up', 'barracks_down',
+        'barracks_right', 'barracks_left', 'town_hall_up', 'town_hall_down', 'town_hall_right', 'town_hall_left',
+        'idle', 'heal_up', 'heal_down', 'heal_right', 'heal_left'],  # Work
+    3: ['rifle_infantry_up', 'rifle_infantry_down', 'rifle_infantry_right', 'rifle_infantry_left', 'idle', 'heal_up',
+        'heal_down', 'heal_right', 'heal_left'],  # Barr
+    4: ['up', 'down', 'left', 'right', 'attack_up', 'attack_down', 'attack_right', 'attack_left', 'idle', 'heal_up',
+        'heal_down', 'heal_right', 'heal_left'],  # Rifl
+    5: ['npc_up', 'npc_down', 'npc_right', 'npc_left', 'idle', 'heal_up', 'heal_down', 'heal_right', 'heal_left'],
+    # Hall
 })
 
 # Reverse dictionary for actions
@@ -433,7 +438,11 @@ class Configuration:
         def create_players(self,
                            game):
 
-            return self._create_player(game, self.player1_type, self.player1_config, self.player1_onehot_encoder, self.player1_model_file), self._create_player(game, self.player1_type, self.player1_config, self.player2_onehot_encoder, self.player2_model_file)
+            return self._create_player(game, self.player1_type, self.player1_config, self.player1_onehot_encoder,
+                                       self.player1_model_file), self._create_player(game, self.player1_type,
+                                                                                     self.player1_config,
+                                                                                     self.player2_onehot_encoder,
+                                                                                     self.player2_model_file)
 
         def _create_player(self,
                            game,
@@ -832,7 +841,9 @@ class Configuration:
                     'y': board_tile.y,
                     'player': board_tile.player,
                     'a_type': d_a_type[board_tile.a_type],
-                    'health': self.player1_config.a_max_health[d_a_type[board_tile.a_type]] if board_tile.player == 1 else self.player2_config.a_max_health[d_a_type[board_tile.a_type]],
+                    'health': self.player1_config.a_max_health[
+                        d_a_type[board_tile.a_type]] if board_tile.player == 1 else self.player2_config.a_max_health[
+                        d_a_type[board_tile.a_type]],
                     'carry': 0,
                     'gold': self.player1_config.INITIAL_GOLD if board_tile.player == 1 else self.player2_config.INITIAL_GOLD,
                     'timeout': self.player1_config.TIMEOUT if board_tile.player == 1 else self.player2_config.TIMEOUT

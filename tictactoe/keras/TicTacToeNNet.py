@@ -1,6 +1,5 @@
 from keras.layers import *
 from keras.models import *
-from keras.optimizers import *
 
 """
 NeuralNet for the game of TicTacToe.

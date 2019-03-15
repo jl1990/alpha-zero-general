@@ -146,9 +146,14 @@ class OneHotEncoder(Encoder):
                     player = 2
 
                 b[x, y][self.P_NAME_IDX_OH:self.P_NAME_IDX_MAX_OH] = self.itb(player, self.P_NAME_IDX_INC_OH)
-                b[x, y][self.A_TYPE_IDX_OH:self.A_TYPE_IDX_MAX_OH] = self.itb(board[x, y, A_TYPE_IDX], self.A_TYPE_IDX_INC_OH)
-                b[x, y][self.HEALTH_IDX_OH:self.HEALTH_IDX_MAX_OH] = self.itb(board[x, y, HEALTH_IDX], self.HEALTH_IDX_INC_OH)
-                b[x, y][self.CARRY_IDX_OH:self.CARRY_IDX_MAX_OH] = self.itb(board[x, y, CARRY_IDX], self.CARRY_IDX_INC_OH)
-                b[x, y][self.MONEY_IDX_OH:self.MONEY_IDX_MAX_OH] = self.itb(board[x, y, MONEY_IDX], self.MONEY_IDX_INC_OH)
-                b[x, y][self.REMAIN_IDX_OH:self.REMAIN_IDX_MAX_OH] = self.itb(board[x, y, TIME_IDX], self.REMAIN_IDX_INC_OH)
+                b[x, y][self.A_TYPE_IDX_OH:self.A_TYPE_IDX_MAX_OH] = self.itb(board[x, y, A_TYPE_IDX],
+                                                                              self.A_TYPE_IDX_INC_OH)
+                b[x, y][self.HEALTH_IDX_OH:self.HEALTH_IDX_MAX_OH] = self.itb(board[x, y, HEALTH_IDX],
+                                                                              self.HEALTH_IDX_INC_OH)
+                b[x, y][self.CARRY_IDX_OH:self.CARRY_IDX_MAX_OH] = self.itb(board[x, y, CARRY_IDX],
+                                                                            self.CARRY_IDX_INC_OH)
+                b[x, y][self.MONEY_IDX_OH:self.MONEY_IDX_MAX_OH] = self.itb(board[x, y, MONEY_IDX],
+                                                                            self.MONEY_IDX_INC_OH)
+                b[x, y][self.REMAIN_IDX_OH:self.REMAIN_IDX_MAX_OH] = self.itb(board[x, y, TIME_IDX],
+                                                                              self.REMAIN_IDX_INC_OH)
         return b

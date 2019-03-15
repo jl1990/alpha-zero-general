@@ -22,10 +22,10 @@ class MazeBattleNNet:
                 h_conv1)))  # batch_size  x board_x x board_y x num_channels
         h_conv3 = Activation('relu')(BatchNormalization(axis=3)(
             Conv2D(args.num_channels, 3, padding='valid', kernel_initializer='random_uniform')(
-            h_conv2)))  # batch_size  x (board_x) x (board_y) x num_channels
+                h_conv2)))  # batch_size  x (board_x) x (board_y) x num_channels
         h_conv4 = Activation('relu')(BatchNormalization(axis=3)(
             Conv2D(args.num_channels, 3, padding='valid', kernel_initializer='random_uniform')(
-            h_conv3)))  # batch_size  x (board_x-2) x (board_y-2) x num_channels
+                h_conv3)))  # batch_size  x (board_x-2) x (board_y-2) x num_channels
         h_conv4_flat = Flatten()(h_conv4)
         s_fc1 = Dropout(args.dropout)(
             Activation('relu')(BatchNormalization(axis=1)(

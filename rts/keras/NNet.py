@@ -53,7 +53,8 @@ class NNetWrapper(NeuralNet):
         """
         input_boards = self.encoder.encode_multiple(input_boards)
 
-        self.nnet.model.fit(x=input_boards, y=[target_pis, target_vs], batch_size=CONFIG.nnet_args.batch_size, epochs=CONFIG.nnet_args.epochs, verbose=VERBOSE_MODEL_FIT)
+        self.nnet.model.fit(x=input_boards, y=[target_pis, target_vs], batch_size=CONFIG.nnet_args.batch_size,
+                            epochs=CONFIG.nnet_args.epochs, verbose=VERBOSE_MODEL_FIT)
 
     def predict(self, board, player=None):
         """
