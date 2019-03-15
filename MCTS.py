@@ -1,5 +1,6 @@
 import hashlib
 import sys
+import time
 
 import numpy as np
 
@@ -41,8 +42,7 @@ class Node:
         probs /= sum_Ps_s
         for a in [x for x in range(self.mcts.game.getActionSize()) if self.getValids()[x]]:
             next_s, next_player = self.mcts.game.getNextState(self.board, self.player, a)
-            stateId = hashlib.md5(
-                (str(self.mcts.game.stringRepresentation(next_s)) + str(next_player)).encode('utf-8')).hexdigest()
+            stateId = self.mcts.calculateId(self.mcts.game, next_s, next_player)
             if stateId in self.mcts.tree:
                 node = self.mcts.tree[stateId]
             else:
@@ -71,12 +71,12 @@ class Node:
             else:
                 epsilon = 0
                 noise = [0] * len(currentNode.edges)
-            ns = sum(edge.stats['N'] for edge in currentNode.edges)
+            ns = sum(edge.N for edge in currentNode.edges)
             for idx, edge in enumerate(currentNode.edges):
                 U = self.mcts.args.cpuct * \
-                    ((1 - epsilon) * edge.stats['P'] + epsilon * noise[idx]) * \
-                    np.sqrt(ns) / (1 + edge.stats['N'])
-                score = edge.stats['Q'] + U
+                    ((1 - epsilon) * edge.P + epsilon * noise[idx]) * \
+                    np.sqrt(ns) / (1 + edge.N)
+                score = edge.Q + U
                 if score > cur_best:
                     cur_best = score
                     del allBest[:]
@@ -84,14 +84,14 @@ class Node:
                 elif score == cur_best:
                     allBest.append(edge)
             selectedEdge = np.random.choice(allBest)
-            selectedEdge.stats['N'] += 1
+            selectedEdge.N += 1
             currentNode = selectedEdge.outNode
             backfillEdges.append(selectedEdge)
         value = currentNode.solveLeaf()
         for edge in backfillEdges:
             direction = 1 if edge.inNode.player == self.player else -1
-            edge.stats['W'] += value * direction
-            edge.stats['Q'] = edge.stats['W'] / edge.stats['N']
+            edge.W += value * direction
+            edge.Q = edge.W / edge.N
 
 
 class Edge:
@@ -100,17 +100,10 @@ class Edge:
         self.inNode = inNode
         self.outNode = outNode
         self.action = action
-        self.id = inNode.id + '|' + outNode.id
-
-        self.stats = {
-            'N': 0,
-            'W': 0,
-            'Q': 0,
-            'P': prior,
-        }
-
-    def __eq__(self, other):
-        return self.id == other.id
+        self.N = 0
+        self.W = 0
+        self.Q = 0
+        self.P = prior
 
 
 class MCTS:
@@ -135,12 +128,16 @@ class MCTS:
             probs: a policy vector where the probability of the ith action is
                    proportional to Nsa[(s,a)]**(1./temp)
         """
+        totalTime = 0
         for i in range(self.args.numMCTSSims):
+            start = time.time()
             self.search(canonicalBoard)
-
+            end = time.time()
+            totalTime += (end - start)
+        print("elapsedTime: " + str(totalTime / self.args.numMCTSSims))
         edges = self.root.edges
 
-        edgesInformation = dict([(edge.action, edge.stats['N']) for edge in edges])
+        edgesInformation = dict([(edge.action, edge.N) for edge in edges])
         counts = [edgesInformation.get(i) if i in edgesInformation.keys() else 0 for i in
                   range(self.game.getActionSize())]
 
@@ -155,7 +152,7 @@ class MCTS:
         return probs
 
     def search(self, canonicalBoard):
-        ident = hashlib.md5((str(self.game.stringRepresentation(canonicalBoard)) + '1').encode('utf-8')).hexdigest()
+        ident = self.calculateId(self.game, canonicalBoard, 1)
         if ident in self.tree:
             currentNode = self.tree[ident]
         else:
@@ -167,3 +164,7 @@ class MCTS:
 
     def addNode(self, node, identifier):
         self.tree[identifier] = node
+
+    @staticmethod
+    def calculateId(game, canonicalBoard, player):
+        return hashlib.md5((str(game.stringRepresentation(canonicalBoard)) + str(player)).encode('utf-8')).hexdigest()
