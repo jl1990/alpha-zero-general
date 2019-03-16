@@ -9,52 +9,59 @@ sys.setrecursionlimit(100000)
 
 class Node:
 
-    def __init__(self, mcts, board, ident, player):
+    def __init__(self, mcts, board, ident):
         self.board = board
         self.edges = []
-        self.player = player
         self.mcts = mcts
         self.id = ident
-        self.valids = None
+        self.validsP1 = None
+        self.validsP2 = None
 
-    def getValids(self):
-        if self.valids is None:
-            self.valids = self.mcts.game.getValidMoves(self.board, self.player)
-        return self.valids
+    def getValids(self, player):
+        if player == 1:
+            if self.validsP1 is None:
+                self.validsP1 = self.mcts.game.getValidMoves(self.board, player)
+            return self.validsP1
+        else:
+            if self.validsP2 is None:
+                self.validsP2 = self.mcts.game.getValidMoves(self.board, player)
+            return self.validsP2
 
-    def isLeaf(self):
-        return len(self.edges) == 0
+    def isLeaf(self, player):
+        return not any([player == edge.player for edge in self.edges])
 
     def isRootNode(self):
         return self.mcts.root.id == self.id
 
-    def addEdge(self, outNode, prior, action):
-        self.edges.append(Edge(self, outNode, prior, action))
+    def addEdge(self, outNode, player, prior, action):
+        self.edges.append(Edge(self, outNode, player, prior, action))
 
-    def solveLeaf(self):
+    def solveLeaf(self, player):
         if self not in self.mcts.Es:
-            self.mcts.Es[self.id] = self.mcts.game.getGameEnded(self.board, self.player)
+            self.mcts.Es[self.id] = self.mcts.game.getGameEnded(self.board, player)
         if self.mcts.Es[self.id] != 0:
             return self.mcts.Es[self.id]  # terminal node
         probs, v = self.mcts.nnet.predict(self.board)
-        probs = probs * self.getValids()  # masking invalid moves
+        valids = self.getValids(player)
+        probs = probs * valids  # masking invalid moves
         sum_Ps_s = np.sum(probs)
         probs /= sum_Ps_s
-        for a in [x for x in range(self.mcts.game.getActionSize()) if self.getValids()[x]]:
-            next_s, next_player = self.mcts.game.getNextState(self.board, self.player, a)
-            stateId = self.mcts.calculateId(self.mcts.game, next_s, next_player)
+        for a in [x for x in range(self.mcts.game.getActionSize()) if valids[x]]:
+            next_s, next_player = self.mcts.game.getNextState(self.board, player, a)
+            stateId = self.mcts.calculateId(self.mcts.game, next_s)
             if stateId in self.mcts.tree:
                 node = self.mcts.tree[stateId]
             else:
-                node = Node(self.mcts, next_s, stateId, next_player)
+                node = Node(self.mcts, next_s, stateId)
                 self.mcts.addNode(node, stateId)
-            self.addEdge(node, probs[a], a)
+            self.addEdge(node, player, probs[a], a)
         return v
 
-    def expand(self):
+    def expand(self, player):
         currentNode = self
         backfillEdges = []
-        while not currentNode.isLeaf():
+        currentPlayer = player
+        while not currentNode.isLeaf(currentPlayer):
             cur_best = -float('inf')
             allBest = []
             epsilon = self.mcts.args.epsilon
@@ -79,19 +86,20 @@ class Node:
             selectedEdge.N += 1
             currentNode = selectedEdge.outNode
             backfillEdges.append(selectedEdge)
-        value = currentNode.solveLeaf()
+            currentPlayer *= -1
+        value = currentNode.solveLeaf(currentPlayer)
         for edge in backfillEdges:
-            direction = 1 if edge.inNode.player == self.player else -1
-            edge.W += value * direction
+            edge.W += value * edge.player
             edge.Q = edge.W / edge.N
 
 
 class Edge:
 
-    def __init__(self, inNode, outNode, prior, action):
+    def __init__(self, inNode, outNode, player, prior, action):
         self.inNode = inNode
         self.outNode = outNode
         self.action = action
+        self.player = player
         self.N = 0
         self.W = 0
         self.Q = 0
@@ -126,7 +134,7 @@ class MCTS:
             self.search(canonicalBoard)
             end = time.time()
             totalTime += (end - start)
-        print("elapsedTime: " + str(totalTime / self.args.numMCTSSims))
+        # print("elapsedTime: " + str(totalTime / self.args.numMCTSSims))
         edges = self.root.edges
 
         edgesInformation = dict([(edge.action, edge.N) for edge in edges])
@@ -144,19 +152,19 @@ class MCTS:
         return probs
 
     def search(self, canonicalBoard):
-        ident = self.calculateId(self.game, canonicalBoard, 1)
+        ident = self.calculateId(self.game, canonicalBoard)
         if ident in self.tree:
             currentNode = self.tree[ident]
         else:
-            currentNode = Node(self, canonicalBoard, ident, 1)
+            currentNode = Node(self, canonicalBoard, ident)
             self.addNode(currentNode, ident)
         self.root = currentNode
-        currentNode.expand()
+        currentNode.expand(1)
         return currentNode
 
     def addNode(self, node, identifier):
         self.tree[identifier] = node
 
     @staticmethod
-    def calculateId(game, canonicalBoard, player):
-        return hashlib.md5((str(game.stringRepresentation(canonicalBoard)) + str(player)).encode('utf-8')).hexdigest()
+    def calculateId(game, canonicalBoard):
+        return hashlib.md5((str(game.stringRepresentation(canonicalBoard))).encode('utf-8')).hexdigest()
