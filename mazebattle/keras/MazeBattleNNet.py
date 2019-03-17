@@ -1,6 +1,5 @@
 from keras.layers import *
 from keras.models import *
-from keras.optimizers import *
 
 
 class MazeBattleNNet:
@@ -38,4 +37,4 @@ class MazeBattleNNet:
         self.v = Dense(1, activation='tanh', name='v', kernel_initializer='random_uniform')(s_fc2)  # batch_size x 1
 
         self.model = Model(inputs=self.input_boards, outputs=[self.pi, self.v])
-        self.model.compile(loss=['categorical_crossentropy', 'mean_squared_error'], optimizer=Adam(args.lr))
+        self.model.compile(loss=['categorical_crossentropy', 'mean_squared_error'], optimizer='nadam')

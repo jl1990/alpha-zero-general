@@ -4,14 +4,14 @@ from mazebattle.keras.NNet import NNetWrapper as nn
 from utils import *
 
 args = dotdict({
-    'numIters': 20,
-    'numEps': 100,
-    'tempThreshold': 20000,
+    'numIters': 30,
+    'numEps': 20,
+    'tempThreshold': 15,
     'updateThreshold': 0.55,
     'maxlenOfQueue': 200000,
-    'numMCTSSims': 50,
+    'numMCTSSims': 60,
     'arenaCompare': 20,
-    'cpuct': 1.2,
+    'cpuct': 1,
     'epsilon': 0.25,
     'dirAlpha': 0.03,
 
@@ -23,7 +23,7 @@ args = dotdict({
 })
 
 if __name__ == "__main__":
-    g = Game(5)
+    g = Game(6)
     nnet = nn(g)
 
     if args.load_model:
