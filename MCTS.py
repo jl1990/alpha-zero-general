@@ -128,6 +128,7 @@ class MCTS:
             probs: a policy vector where the probability of the ith action is
                    proportional to Nsa[(s,a)]**(1./temp)
         """
+        currentPlayer = 1
         totalTime = 0
         for i in range(self.args.numMCTSSims):
             start = time.time()
@@ -135,7 +136,7 @@ class MCTS:
             end = time.time()
             totalTime += (end - start)
         # print("elapsedTime: " + str(totalTime / self.args.numMCTSSims))
-        edges = self.root.edges
+        edges = [edge for edge in self.root.edges if edge.player == currentPlayer]
 
         edgesInformation = dict([(edge.action, edge.N) for edge in edges])
         counts = [edgesInformation.get(i) if i in edgesInformation.keys() else 0 for i in
