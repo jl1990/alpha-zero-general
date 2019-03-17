@@ -65,13 +65,14 @@ class Node:
             cur_best = -float('inf')
             allBest = []
             epsilon = self.mcts.args.epsilon
+            edges = [edge for edge in currentNode.edges if edge.player == currentPlayer]
             if currentNode.isRootNode() and epsilon > 0:
-                noise = np.random.dirichlet([self.mcts.args.dirAlpha] * len(currentNode.edges))
+                noise = np.random.dirichlet([self.mcts.args.dirAlpha] * len(edges))
             else:
                 epsilon = 0
-                noise = [0] * len(currentNode.edges)
-            ns = sum(edge.N for edge in currentNode.edges)
-            for idx, edge in enumerate(currentNode.edges):
+                noise = [0] * len(edges)
+            ns = sum(edge.N for edge in edges)
+            for idx, edge in enumerate(edges):
                 U = self.mcts.args.cpuct * \
                     ((1 - epsilon) * edge.P + epsilon * noise[idx]) * \
                     np.sqrt(ns) / (1 + edge.N)
