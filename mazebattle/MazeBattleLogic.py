@@ -189,7 +189,7 @@ class Board:
         return toTag is not None and toTag == Board.TAG_EMPTY
 
     def can_build(self, color, toTag):
-        return (toTag is not None) and (toTag == Board.TAG_EMPTY or toTag == Board.TAG_WALL_1_HIT)
+        return (toTag is not None) and (toTag == Board.TAG_EMPTY or toTag == Board.TAG_WALL_0_HIT)
 
     def can_break(self, color, toTag):
         return (toTag is not None) and (toTag == Board.TAG_WALL_1_HIT or toTag == Board.TAG_WALL_0_HIT)
@@ -257,7 +257,7 @@ class Board:
             self[affectedPoint.x][affectedPoint.y] -= 1
         elif action == Board.ACTION_BUILD_WALL:
             affectedPoint = playerPos.add_point(vDif)
-            self[affectedPoint.x][affectedPoint.y] = Board.TAG_WALL_1_HIT
+            self[affectedPoint.x][affectedPoint.y] += 1
         elif action == Board.ACTION_MOVE:
             affectedPoint = playerPos.add_point(vDif)
             if self[playerPos.x][playerPos.y] == color:
