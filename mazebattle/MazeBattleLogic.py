@@ -23,7 +23,7 @@ Actions will be used with a direction. For example
 
 valid moves vector will be booleans:
 
-[stay, move1, .. , move8, build1, .., build8, break1, .., break8]
+[move1, .. , move8, build1, .., build8, break1, .., break8]
 
 therefore vector size --> 33
 
@@ -65,10 +65,9 @@ class Board:
     TAG_PLAYER1_STARTING_POINT = 5
     TAG_PLAYER2_STARTING_POINT = 6
 
-    ACTION_STAY = 0
-    ACTION_MOVE = 1
-    ACTION_BUILD_WALL = 2
-    ACTION_BREAK_WALL = 3
+    ACTION_MOVE = 0
+    ACTION_BUILD_WALL = 1
+    ACTION_BREAK_WALL = 2
 
     def __init__(self, n=random.randint(5, 20), wallPercent=None, initialBoard=None):
         """Set up initial board configuration."""
@@ -108,8 +107,7 @@ class Board:
         (1 for player1, -1 for player2)
         @param color not used and came from previous version.        
         """
-        moves = [1]  # stores the legal moves.
-        # moves.add((Board.ACTION_STAY, 0))  # Add no move action
+        moves = []  # stores the legal moves.
 
         # Get surrounding coordinates
         playerPos = self.find_player(color)
