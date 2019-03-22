@@ -88,7 +88,7 @@ class Node:
             currentNode = selectedEdge.outNode
             backfillEdges.append(selectedEdge)
             currentPlayer *= -1
-        value = currentNode.solveLeaf(currentPlayer) * currentPlayer
+        value = currentNode.solveLeaf(currentPlayer) * currentPlayer * player
         for edge in backfillEdges:
             edge.W += value * edge.player
             edge.Q = edge.W / edge.N
