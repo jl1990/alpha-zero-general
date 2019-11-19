@@ -60,7 +60,7 @@ class Game:
         """
         pass
 
-    def getGameEnded(self, board, player):
+    def getGameEnded(self, board, player, turn):
         """
         Input:
             board: current board

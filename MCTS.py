@@ -36,9 +36,9 @@ class Node:
     def addEdge(self, outNode, player, prior, action):
         self.edges.append(Edge(self, outNode, player, prior, action))
 
-    def solveLeaf(self, player):
+    def solveLeaf(self, player, turn):
         if self not in self.mcts.Es:
-            self.mcts.Es[self.id] = self.mcts.game.getGameEnded(self.board, player)
+            self.mcts.Es[self.id] = self.mcts.game.getGameEnded(self.board, player, turn)
         if self.mcts.Es[self.id] != 0:
             return self.mcts.Es[self.id]  # terminal node
         probs, v = self.mcts.nnet.predict(self.board)
@@ -88,7 +88,7 @@ class Node:
             currentNode = selectedEdge.outNode
             backfillEdges.append(selectedEdge)
             currentPlayer *= -1
-        value = currentNode.solveLeaf(currentPlayer) * currentPlayer * player
+        value = currentNode.solveLeaf(currentPlayer, len(backfillEdges)) * currentPlayer * player
         for edge in backfillEdges:
             edge.W += value * edge.player
             edge.Q = edge.W / edge.N

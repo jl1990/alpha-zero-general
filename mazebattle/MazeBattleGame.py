@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import print_function
 
 import random
@@ -57,7 +58,7 @@ class MazeBattleGame(Game):
         legalMoves = b.get_legal_moves(player)
         return np.array(legalMoves)
 
-    def getGameEnded(self, board, player):
+    def getGameEnded(self, board, player, turn):
         # return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
         # player = 1
         b = Board(self.n, initialBoard=board)
@@ -68,7 +69,7 @@ class MazeBattleGame(Game):
             return -1
         # if b.has_legal_moves():
         #    return 0
-        return 0  # We should not have any draw...
+        return 1e-4 if (turn >= self.n*10) else 0  # Draw on 10 times game board turns
         # draw has a very little value 
         # return 1e-4
 
