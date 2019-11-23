@@ -84,12 +84,12 @@ class Node:
                 elif score == cur_best:
                     allBest.append(edge)
             selectedEdge = np.random.choice(allBest)
-            selectedEdge.N += 1
             currentNode = selectedEdge.outNode
             backfillEdges.append(selectedEdge)
             currentPlayer *= -1
         value = currentNode.solveLeaf(currentPlayer, len(backfillEdges)) * currentPlayer * player
         for edge in backfillEdges:
+            edge.N += 1
             edge.W += value * edge.player
             edge.Q = edge.W / edge.N
 
