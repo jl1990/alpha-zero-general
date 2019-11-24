@@ -27,8 +27,9 @@ class Node:
                 self.validsP2 = self.mcts.game.getValidMoves(self.board, player)
             return self.validsP2
 
-    def isLeaf(self, player):
-        return not any([player == edge.player for edge in self.edges])
+    def isLeaf(self, player, turn):
+        return (not any([player == edge.player for edge in self.edges])) \
+               or self.mcts.game.getGameEnded(self.board, player, turn) != 0
 
     def isRootNode(self):
         return self.mcts.root.id == self.id
@@ -61,7 +62,7 @@ class Node:
         currentNode = self
         backfillEdges = []
         currentPlayer = player
-        while not currentNode.isLeaf(currentPlayer):
+        while not currentNode.isLeaf(currentPlayer, len(backfillEdges)):
             cur_best = -float('inf')
             allBest = []
             epsilon = self.mcts.args.epsilon

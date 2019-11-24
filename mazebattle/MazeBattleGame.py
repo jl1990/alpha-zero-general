@@ -60,18 +60,14 @@ class MazeBattleGame(Game):
 
     def getGameEnded(self, board, player, turn):
         # return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
-        # player = 1
+        if turn >= self.n * 5:
+            return 1e-4
         b = Board(self.n, initialBoard=board)
-
         if b.is_win(player):
             return 1
         if b.is_win(-player):
             return -1
-        # if b.has_legal_moves():
-        #    return 0
-        return 1e-4 if (turn >= self.n*10) else 0  # Draw on 10 times game board turns
-        # draw has a very little value 
-        # return 1e-4
+        return 0
 
     def getCanonicalForm(self, board, player):
         # return state if player==1, else return -state if player==-1
@@ -109,20 +105,20 @@ def display(board):
         for y in range(n):
             tag = board[x][y]
             if tag == Board.TAG_EMPTY:
-                print(".", end='')
+                print("□", end='')
             elif tag == Board.TAG_WALL_0_HIT:
-                print("Ñ", end='')
+                print("░", end='')
             elif tag == Board.TAG_WALL_1_HIT:
-                print("#", end='')
+                print("█", end='')
             elif tag == Board.TAG_PLAYER1_STARTING_POINT:
-                print("S", end='')
+                print("🏁", end='')
             elif tag == Board.TAG_PLAYER2_STARTING_POINT:
-                print("E", end='')
+                print("️✪", end='')
             elif tag == Board.TAG_PLAYER1:
-                print("1", end='')
+                print("⛹", end='')
             elif tag == Board.TAG_PLAYER2:
-                print("2", end='')
+                print("☠", end='')
             else:
-                print("*", end='')
+                print("☯", end='')
         print("\n")
     print("--")
