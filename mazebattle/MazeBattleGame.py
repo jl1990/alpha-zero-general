@@ -60,14 +60,12 @@ class MazeBattleGame(Game):
 
     def getGameEnded(self, board, player, turn):
         # return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
-        if turn >= self.n * 5:
-            return 1e-4
         b = Board(self.n, initialBoard=board)
         if b.is_win(player):
             return 1
         if b.is_win(-player):
             return -1
-        return 0
+        return 1e-4 if (turn >= self.n * 5) else 0
 
     def getCanonicalForm(self, board, player):
         # return state if player==1, else return -state if player==-1
